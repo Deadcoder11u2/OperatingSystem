@@ -104,10 +104,11 @@ public class Main {
 			processes.get(g.pid).completion_time = Math.max(processes.get(g.pid).completion_time, g.end);
 		}
 		pw.println("************************");
-		pw.println("PID \tWAIT \tTURN AROUND");
+		pw.println("PID \tWAIT \tTURN A \tCOMPLETION");
 		for(int i = 0 ; i < n ; i++) {
 			Process p = processes.get(i);
-			pw.println(p.pid + " \t" + p.wait_time + " \t" + p.completion_time);
+			pw.println(p.pid + " \t" + p.wait_time + " \t" + 
+			(p.completion_time - p.arrival_time) + "\t " + p.completion_time);
 		}
 		pw.close();
 		fs.close();
