@@ -7,12 +7,16 @@ public class Main {
 		int arrival_time;
 		int pid;
 		int cpu_needed;
+		int wait_time;
+		int completion_time = 0;
 
 		Process(int cpu_burst, int arrival_time, int pid) {
 			this.cpu_burst = cpu_burst;
 			this.arrival_time = arrival_time;
 			cpu_needed = cpu_burst;
 			this.pid = pid;
+			wait_time = 0;
+			completion_time = 0;
 		}
 		
 		public String toString() { return "{"+pid+","+cpu_needed+"}" ; }
@@ -39,14 +43,19 @@ public class Main {
 		int n = fs.nextInt();
 		Comparator<Process> tim = (p1, p2) -> Integer.compare(p1.arrival_time, p2.arrival_time);
 		PriorityQueue<Process> a = new PriorityQueue<Process>(tim);
+		ArrayList<Process> processes = new ArrayList<>();
 		for (int i = 0; i < n; i++) {
 			int cpu_burst = fs.nextInt();
 			int arrival_time = fs.nextInt();
 			a.add(new Process(cpu_burst, arrival_time, i));
+			processes.add(new Process(cpu_burst, arrival_time, i));
 		}
-		Comparator<Process> burst = (p1, p2) -> Integer.compare(p1.cpu_needed, p2.cpu_needed);
+		Comparator<Process> burst = (p1, p2) -> {
+			if(p1.cpu_needed == p2.cpu_needed) return Integer.compare(p1.arrival_time, p2.arrival_time);
+			return Integer.compare(p1.cpu_needed, p2.cpu_needed);
+		};
 		PriorityQueue<Process> ready = new PriorityQueue<Process>(burst);
-		int timer = 1;
+		int timer = 0;
 		int cur_pid = -1;
 		ArrayList<Gantt> chart = new ArrayList<>();
 		while (!ready.isEmpty() || !a.isEmpty()) {
@@ -55,6 +64,10 @@ public class Main {
 					ready.add(a.poll());
 				} else
 					break;
+			}
+			if(ready.isEmpty()) {
+				timer++;
+				continue;
 			}
 			Process min_burst = ready.peek();
 			if (cur_pid == min_burst.pid) {
@@ -81,9 +94,20 @@ public class Main {
 				if (min_burst.cpu_needed == 0)
 					ready.poll();
 			}
+			for(Process p: ready) {
+				if(p.pid != min_burst.pid)processes.get(p.pid).wait_time++;
+			}
 		}
+		chart.get(chart.size()-1).end++;
 		for (Gantt g : chart) {
 			pw.println(g);
+			processes.get(g.pid).completion_time = Math.max(processes.get(g.pid).completion_time, g.end);
+		}
+		pw.println("************************");
+		pw.println("PID \tWAIT \tTURN AROUND");
+		for(int i = 0 ; i < n ; i++) {
+			Process p = processes.get(i);
+			pw.println(p.pid + " \t" + p.wait_time + " \t" + p.completion_time);
 		}
 		pw.close();
 		fs.close();
