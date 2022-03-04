@@ -105,11 +105,18 @@ public class Main {
 		}
 		pw.println("************************");
 		pw.println("PID \tWAIT \tTURN A \tCOMPLETION");
+		double tot_turn = 0.0;
+		double tot_wait = 0.0;
 		for(int i = 0 ; i < n ; i++) {
 			Process p = processes.get(i);
 			pw.println(p.pid + " \t" + p.wait_time + " \t" + 
 			(p.completion_time - p.arrival_time) + "\t " + p.completion_time);
+			tot_turn += p.completion_time - p.arrival_time;
+			tot_wait += p.wait_time;
 		}
+		
+		pw.println("Average Wait Time is:" + tot_wait/n);
+		pw.println("Average Completion Time is:" + tot_turn/n);
 		pw.close();
 		fs.close();
 	}
