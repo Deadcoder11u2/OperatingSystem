@@ -37,7 +37,7 @@ public class Main {
 	}
 
 	public static void main(String args[]) throws IOException {
-		System.setIn(new FileInputStream("D:\\program\\javaCPEclipse\\CodeForces\\src\\input.txt"));
+		//System.setIn(new FileInputStream("D:\\program\\javaCPEclipse\\CodeForces\\src\\input.txt"));
 		Scanner fs = new Scanner(System.in);
 		PrintWriter pw = new PrintWriter(System.out, true);
 		int n = fs.nextInt();
