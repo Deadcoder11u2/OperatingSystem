@@ -1,49 +1,63 @@
-/*
-Write a program to simulate the preemptive  SJF scheduling algorithms to find  average turnaround time and waiting time 
-and completion time. Draw gantt chart as well. 
-Read no of process, their cpu burst, arrival time from user.
-*/
 #include<stdio.h>
-int findShortestJob(int *cpuTime,int *arrivalTime, int n,int time){
-	int res = 0;
-	for(int i=0;i<n;i++){
-		if(arrivalTime[i]>time || cpuTime[i] < 1)
-			continue;
-		if(cpuTime[i] < cpuTime[res])
-			res = i;
-		else if(cpuTime[res] == 0)
-			res = i;
-	}
-	return res;
+int findShortestJob(int *cpuTime,int *arrTime,int n,int time){
+int i,res = 0;
+for(i=0;i<n;i++){
+if(arrTime[i] > time || cpuTime[i] == 0)
+continue;
+else if(cpuTime[res] == 0)
+res = i;
+else if(cpuTime[i] < cpuTime[res])
+res = i;
 }
-int checkIfFinish(int *cpuTime,int n){
-	for(int i=0;i<n;i++){
-		if(cpuTime[i]>0)
-			return 1;
-	}
-	return 0;
+return res;
 }
-void sjfPre(int *cpu,int *arr,int *exit1,int n){
-	int cpuTime[n],arrivalTime[n];
-	int time,sj;
-	for(time=0;time<n;time++){
-		cpuTime[time] = cpu[time];
-		arrivalTime[time] = arr[time];
-	}
-	for(time=0;checkIfFinish(cpuTime,n);time++){
-		sj = findShortestJob(cpuTime,arrivalTime,n,time);
-		cpuTime[sj]--;
-		if(cpuTime[sj] < 1)
-			exit1[sj] = time;
-		printf("Time: %d \tProcess No:%d\n",time,sj+1);
-	}
+int checkIfFinished(int *cpuTime,int n){
+for(int i=0;i<n;i++){
+if(cpuTime[i] != 0)
+return 1;
+}
+return 0;
+}
+void sjfp(int *cpuTime,int *arrTime,int *exitTime,int n){
+int cpu[n],arr[n];
+int i,time = 0,sj,prev=-1;
+for(i=0;i<n;i++){
+cpu[i] = cpuTime[i];
+arr[i] = arrTime[i];
+}
+for(time = 0;checkIfFinished(cpu,n);time++){
+sj = findShortestJob(cpu,arr,n,time);
+if(prev != sj){
+printf("%d--((%d))--",time,sj+1);
+prev = sj;
+}
+cpu[sj]--;
+if(cpu[sj] == 0)
+exitTime[sj] = time+1;
+}
+printf("%d\n",time+1);
 }
 int main(){
-	int n,i;
-	scanf("%d",&n);
-	int cpuTime[n],arrivalTime[n],exitTime[n];
-	for(i=0;i<n;i++)
-		scanf("%d %d",cpuTime+i,arrivalTime+i);
-	sjfPre(cpuTime,arrivalTime,exitTime,n);
-	return 0;
+int n,i;
+scanf("%d",&n);
+int cpuTime[n],arrTime[n],exitTime[n],wt[n],tat[n];
+float avgwt=0,avgtat=0;
+for(i = 0;i<n;i++)
+scanf("%d %d",cpuTime+i,arrTime+i);
+sjfp(cpuTime,arrTime,exitTime,n);
+printf("***************************************************************************************************************\n");
+printf("Process No \tArrivalTime\tBurstTime\tWaitingTime\tCompletionTime\tTurnAroundTime\n");
+printf("***************************************************************************************************************\n");
+for(i = 0;i<n;i++){
+tat[i] = exitTime[i] - arrTime[i];
+wt[i] = tat[i] - cpuTime[i];
+avgtat += tat[i];
+avgwt += wt[i];
+printf("%d\t\t%d\t\t%d\t\t%d\t\t%d\t\t%d\n",i+1,arrTime[i],cpuTime[i],wt[i],exitTime[i],tat[i]);
+}
+avgtat =(float)avgtat/n;
+avgwt =(float)avgwt/n;
+printf("***************************************************************************************************************\n");
+printf("Average Waiting Time: %f\nAverage Turn Around Time:%f\n",avgwt,avgtat);
+return 0;
 }

@@ -1,123 +1,162 @@
-import java.io.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.locks.ReentrantLock;
+import static java.lang.Math.*;
+import static java.lang.System.out;
+import java.io.FileInputStream;
 import java.util.*;
-
-public class Main {
-	static class Process {
-		int cpu_burst;
-		int arrival_time;
-		int pid;
-		int cpu_needed;
-		int wait_time;
-		int completion_time = 0;
-
-		Process(int cpu_burst, int arrival_time, int pid) {
-			this.cpu_burst = cpu_burst;
-			this.arrival_time = arrival_time;
-			cpu_needed = cpu_burst;
-			this.pid = pid;
-			wait_time = 0;
-			completion_time = 0;
-		}
-		
-		public String toString() { return "{"+pid+","+cpu_needed+"}" ; }
-	}
-
-	static class Gantt {
-		int pid, start, end;
-
-		Gantt(int pid) {
-			this.pid = pid;
-			start = 0;
-			end = 0;
-		}
-
-		public String toString() {
-			return "{pid:" + pid + "\t start:" + start + "\t end:" + end + "}";
-		}
-	}
-
-	public static void main(String args[]) throws IOException {
-		//System.setIn(new FileInputStream("D:\\program\\javaCPEclipse\\CodeForces\\src\\input.txt"));
-		Scanner fs = new Scanner(System.in);
-		PrintWriter pw = new PrintWriter(System.out, true);
-		int n = fs.nextInt();
-		Comparator<Process> tim = (p1, p2) -> Integer.compare(p1.arrival_time, p2.arrival_time);
-		PriorityQueue<Process> a = new PriorityQueue<Process>(tim);
-		ArrayList<Process> processes = new ArrayList<>();
-		for (int i = 0; i < n; i++) {
-			int cpu_burst = fs.nextInt();
-			int arrival_time = fs.nextInt();
-			a.add(new Process(cpu_burst, arrival_time, i));
-			processes.add(new Process(cpu_burst, arrival_time, i));
-		}
-		Comparator<Process> burst = (p1, p2) -> {
-			if(p1.cpu_needed == p2.cpu_needed) return Integer.compare(p1.arrival_time, p2.arrival_time);
-			return Integer.compare(p1.cpu_needed, p2.cpu_needed);
-		};
-		PriorityQueue<Process> ready = new PriorityQueue<Process>(burst);
-		int timer = 0;
-		int cur_pid = -1;
-		ArrayList<Gantt> chart = new ArrayList<>();
-		while (!ready.isEmpty() || !a.isEmpty()) {
-			while (!a.isEmpty()) {
-				if (a.peek().arrival_time <= timer) {
-					ready.add(a.poll());
-				} else
-					break;
-			}
-			if(ready.isEmpty()) {
-				timer++;
-				continue;
-			}
-			Process min_burst = ready.peek();
-			if (cur_pid == min_burst.pid) {
-				if (chart.size() > 0) {
-					chart.get(chart.size() - 1).end++;
-				}
-				timer++;
-				min_burst.cpu_needed--;
-				if (min_burst.cpu_needed == 0)
-					ready.poll();
-			} else {
-				cur_pid = min_burst.pid;
-				if (chart.size() > 0) {
-					chart.get(chart.size() - 1).end++;
-				}
-				if (cur_pid != -1) {
-					Gantt temp = new Gantt(min_burst.pid);
-					temp.start = timer;
-					temp.end = timer;
-					chart.add(temp);
-				}
-				timer++;
-				min_burst.cpu_needed--;
-				if (min_burst.cpu_needed == 0)
-					ready.poll();
-			}
-			for(Process p: ready) {
-				if(p.pid != min_burst.pid)processes.get(p.pid).wait_time++;
-			}
-		}
-		chart.get(chart.size()-1).end++;
-		for (Gantt g : chart) {
-			pw.println(g);
-			processes.get(g.pid).completion_time = Math.max(processes.get(g.pid).completion_time, g.end);
-		}
-		pw.println("************************");
-		pw.println("PID \tWAIT \tTURN A \tCOMPLETION");
-		double tot_turn = 0.0;
-		double tot_wait = 0.0;
-		for(int i = 0 ; i < n ; i++) {
-			Process p = processes.get(i);
-			pw.println(p.pid + " \t" + p.wait_time + " \t" + 
-			(p.completion_time - p.arrival_time) + "\t " + p.completion_time);
-			tot_turn += p.completion_time - p.arrival_time;
-			tot_wait += p.wait_time;
-		}
-		
-		pw.println("Average Wait Time is:" + tot_wait/n);
-		pw.println("Average Completion Time is:" + tot_turn/n);
-		pw.close();
-		fs.close();
-	}
+public class A {
+static ArrayList<Integer> getSafeSeq() {
+int work[] = Arrays.copyOf(available, m);
+boolean finish[] = new boolean[n];
+ArrayList<Integer> seq = new ArrayList<>();
+int ans = -1;
+for (int i = 0; i < n; i++) {
+for (int j = 0; j < n; j++) {
+boolean isless = true;
+if (finish[j]) continue;
+for (int k = 0; k < m; k++) {
+isless &= need[j][k] <= work[k];
+}
+if (isless) {
+ans = j;
+finish[j] = true;
+for (int k = 0; k < m; k++) {
+work[k] += allocation[ans][k];
+}
+break;
+}
+}
+if (ans == -1) throw null;
+seq.add(ans);
+}
+return seq;
+}
+static volatile ReentrantLock rl;
+static class ProcessExecution implements Runnable {
+int t_no;
+public ProcessExecution(int t_no) {
+this.t_no = t_no;
+}
+@Override
+public void run() {
+rl.lock();
+try {
+out.println("Acquired the lock: " + t_no);
+out.println("I am running");
+try {
+Thread.sleep(1000);
+} catch (Exception e) {}
+out.println("Now the available is");
+for (int i = 0; i < m; i++) {
+worke[i] += allocation[t_no][i];
+}
+out.println(Arrays.toString(worke));
+} finally {
+rl.unlock();
+}
+}
+}
+static int n, m;
+static int allocation[][];
+static int max_need[][];
+static int need[][];
+static int available[];
+static int worke[];
+static void Banker() throws Exception {
+for (int i = 0; i < n; i++) {
+for (int j = 0; j < m; j++) {
+need[i][j] = max_need[i][j] - allocation[i][j];
+}
+}
+out.println("Allocation");
+for (int i = 0; i < n; i++) {
+for (int j = 0; j < m; j++) {
+out.printf("%d\t", allocation[i][j]);
+}
+out.println();
+}
+out.println("Need");
+for (int i = 0; i < n; i++) {
+for (int j = 0; j < m; j++) {
+out.printf("%d\t", need[i][j]);
+}
+out.println();
+}
+out.println("Max");
+for (int i = 0; i < n; i++) {
+for (int j = 0; j < m; j++) {
+out.printf("%d\t", max_need[i][j]);
+}
+out.println();
+}
+ArrayList<Integer> safe_sequence = getSafeSeq();
+Thread th[] = new Thread[n];
+ProcessExecution pr[] = new ProcessExecution[n];
+worke = Arrays.copyOf(available, m);
+out.println(safe_sequence);
+for (int i = 0; i < n; i++) {
+pr[i] = new
+ProcessExecution(safe_sequence.get(i));
+th[i] = new Thread(pr[i]);
+th[i].setPriority(i + 1);
+th[i].start();
+th[i].join();
+}
+}
+public static void main(String args[]) throws Exception {
+rl = new ReentrantLock();
+ExecutorService service =
+Executors.newSingleThreadExecutor();
+Scanner fs = new Scanner(System.in);
+out.println("Enter the number of threads");
+n = fs.nextInt();
+out.println("Enter the number of dishes");
+m = fs.nextInt();
+allocation = new int[n][m];
+for (int i = 0; i < n; i++) {
+out.printf("Enter the allocation of %d\n", i + 1);
+for (int j = 0; j < m; j++) {
+allocation[i][j] = fs.nextInt();
+}
+}
+max_need = new int[n][m];
+for (int i = 0; i < n; i++) {
+out.printf("Enter the max of thread %d\n", i + 1);
+for (int j = 0; j < m; j++) {
+max_need[i][j] = fs.nextInt();
+}
+}
+out.printf("Enter the available of all the products\n");
+available = new int[m];
+for (int i = 0; i < m; i++) {
+available[i] = fs.nextInt();
+}
+need = new int[n][m];
+Banker();
+int request[] = new int[m + 1];
+out.println("Enter the thread no");
+request[m] = fs.nextInt() - 1;
+out.println("Enter the request");
+for (int i = 0; i < m; i++) {
+request[i] = fs.nextInt();
+}
+boolean canGrant = true;
+for (int i = 0; i < m; i++) {
+canGrant &= request[i] <= need[request[m]][i];
+canGrant &= request[i] <= available[i];
+}
+if (!canGrant) {
+out.println("Request Cannot be Granted");
+} else {
+out.println("Request Granted Recalculating the Safe Sequence");
+for (int i = 0; i < m; i++) {
+allocation[request[m]][i] += request[i];
+}
+for (int i = 0; i < m; i++) {
+available[i] -= request[i];
+}
+Banker();
+}
+}
 }
